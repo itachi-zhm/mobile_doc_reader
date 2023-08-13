@@ -1,5 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mobile_doc_reader/screens/information_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -9,6 +15,8 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  File? imageFile;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,7 +30,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
           leading: Padding(
               padding: const EdgeInsets.all(8),
-              child: SvgPicture.asset("lib/assets/scanner.svg")),
+              child: SvgPicture.asset("assets/scanner.svg")),
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
@@ -91,8 +99,17 @@ class _MainScreenState extends State<MainScreen> {
                           ),
                           child: IconButton(
                             icon: Icon(Icons.add, color: Colors.blue, size: 35),
-                            onPressed: () {
-                              selectDocument(context);
+                            onPressed: () async {
+                              Map<Permission, PermissionStatus> statues =
+                                  await [Permission.storage, Permission.camera]
+                                      .request();
+
+                              if (statues[Permission.storage]!.isGranted &&
+                                  statues[Permission.camera]!.isGranted) {
+                                selectDocument(context);
+                              } else {
+                                print("No permission added");
+                              }
                             },
                           ),
                         ),
@@ -130,7 +147,7 @@ class _MainScreenState extends State<MainScreen> {
                     Column(
                       children: [
                         SvgPicture.asset(
-                          "lib/assets/secure.svg",
+                          "assets/secure.svg",
                           color: Colors.blueGrey,
                         ),
                         SizedBox(
@@ -156,7 +173,7 @@ class _MainScreenState extends State<MainScreen> {
                     Column(
                       children: [
                         SvgPicture.asset(
-                          "lib/assets/notes.svg",
+                          "assets/notes.svg",
                           color: Colors.blueGrey,
                         ),
                         SizedBox(
@@ -180,7 +197,7 @@ class _MainScreenState extends State<MainScreen> {
                     Column(
                       children: [
                         SvgPicture.asset(
-                          "lib/assets/settings.svg",
+                          "assets/settings.svg",
                           color: Colors.blueGrey,
                         ),
                         SizedBox(
@@ -218,7 +235,7 @@ class _MainScreenState extends State<MainScreen> {
                   child: Column(
                     children: [
                       SvgPicture.asset(
-                        "lib/assets/scanner.svg",
+                        "assets/scanner.svg",
                         width: 100,
                         height: 100,
                         color: Colors.white,
@@ -242,64 +259,113 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ));
   }
-}
 
-Future<dynamic> selectDocument(BuildContext context) {
-  return showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          height: 100,
-          decoration: BoxDecoration(
-              color: Colors.blueGrey.shade100,
-              borderRadius: BorderRadius.circular(20)),
-          child: Column(
-            children: [
-              Expanded(
-                child: InkWell(
-                  focusColor: Colors.blue,
-                  child: Row(
-                    children: [
-                      SvgPicture.asset(
-                        "lib/assets/camera.svg",
-                        width: 30,
-                        height: 30,
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text("Scan from camera")
-                    ],
+  void selectDocument(BuildContext context) {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            height: 100,
+            decoration: BoxDecoration(
+                color: Colors.blueGrey.shade50,
+                borderRadius: BorderRadius.circular(20)),
+            child: Column(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    focusColor: Colors.blue,
+                    child: Row(
+                      children: [
+                        SvgPicture.asset(
+                          "assets/camera.svg",
+                          width: 30,
+                          height: 30,
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        const Text("Scan from camera")
+                      ],
+                    ),
+                    onTap: () {
+                      pickFromCamera();
+                      if (imageFile != null) {}
+                    },
                   ),
-                  onTap: () {
-                    //scanCamera(context);
-                    Navigator.of(context).pop();
-                  },
                 ),
-              ),
-              Expanded(
-                child: InkWell(
-                  child: Row(
-                    children: [
-                      SvgPicture.asset(
-                        "lib/assets/gallery.svg",
-                        width: 30,
-                        height: 30,
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text("Scan from camera")
-                    ],
+                Expanded(
+                  child: InkWell(
+                    child: Row(
+                      children: [
+                        SvgPicture.asset(
+                          "assets/gallery.svg",
+                          width: 30,
+                          height: 30,
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text("Scan from gallery")
+                      ],
+                    ),
+                    onTap: () {
+                      pickFromGallery();
+                      Navigator.pop(context);
+                    },
                   ),
-                  onTap: () {
-                    //scanGallery(context);
-                  },
                 ),
-              ),
-            ],
-          ),
-        );
+              ],
+            ),
+          );
+        });
+  }
+
+  final picker = ImagePicker();
+
+  pickFromCamera() async {
+    try {
+      await picker
+          .pickImage(source: ImageSource.camera, imageQuality: 50)
+          .then((value) {
+        if (value != null) {
+          cropImage(File(value.path));
+        }
       });
+    } catch (e) {
+      print("error:$e");
+    }
+  }
+
+  pickFromGallery() async {
+    await picker
+        .pickImage(source: ImageSource.gallery, imageQuality: 50)
+        .then((value) {
+      if (value != null) {
+        cropImage(File(value.path));
+      }
+    });
+  }
+
+  cropImage(File file) async {
+    final croppedFile =
+        await ImageCropper().cropImage(sourcePath: file.path, uiSettings: [
+      AndroidUiSettings(
+          toolbarTitle: "Documment Cropper",
+          toolbarColor: Colors.blue,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false)
+    ]);
+    if (croppedFile != null) {
+      imageCache.clear();
+      setState(() {
+        imageFile = File(croppedFile.path);
+      });
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => InformationScreen(
+                imageFile: imageFile,
+              )));
+    }
+  }
 }
