@@ -30,7 +30,10 @@ class _MainScreenState extends State<MainScreen> {
           ),
           leading: Padding(
               padding: const EdgeInsets.all(8),
-              child: SvgPicture.asset("assets/scanner.svg")),
+              child: SvgPicture.asset(
+                "assets/scanner.svg",
+                color: Color.fromARGB(255, 3, 0, 92),
+              )),
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
@@ -106,7 +109,8 @@ class _MainScreenState extends State<MainScreen> {
 
                               if (statues[Permission.storage]!.isGranted &&
                                   statues[Permission.camera]!.isGranted) {
-                                selectDocument(context);
+                                //selectDocument(context);
+                                selectTypeDocument(context);
                               } else {
                                 print("No permission added");
                               }
@@ -228,7 +232,7 @@ class _MainScreenState extends State<MainScreen> {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.deepOrangeAccent,
+                    color: Color.fromARGB(255, 3, 0, 92),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   width: MediaQuery.of(context).size.width,
@@ -258,6 +262,88 @@ class _MainScreenState extends State<MainScreen> {
             ],
           ),
         ));
+  }
+
+  void selectTypeDocument(BuildContext context) {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            height: 150,
+            decoration: BoxDecoration(
+                color: Colors.blueGrey.shade50,
+                borderRadius: BorderRadius.circular(20)),
+            child: Column(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    focusColor: Colors.blue,
+                    child: Row(
+                      children: [
+                        SvgPicture.asset(
+                          "assets/idCard.svg",
+                          width: 30,
+                          height: 30,
+                          color: Color.fromARGB(255, 3, 0, 92),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        const Text("Scan an id card")
+                      ],
+                    ),
+                    onTap: () {
+                      selectDocument(context);
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: InkWell(
+                    child: Row(
+                      children: [
+                        SvgPicture.asset(
+                          "assets/passport.svg",
+                          width: 30,
+                          height: 30,
+                          color: Color.fromARGB(255, 3, 0, 92),
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text("Scan a Passport")
+                      ],
+                    ),
+                    onTap: () {
+                      selectDocument(context);
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: InkWell(
+                    child: Row(
+                      children: [
+                        SvgPicture.asset(
+                          "assets/signature1.svg",
+                          width: 30,
+                          height: 30,
+                          color: Color.fromARGB(255, 3, 0, 92),
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text("Scan a Check")
+                      ],
+                    ),
+                    onTap: () {
+                      selectDocument(context);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        });
   }
 
   void selectDocument(BuildContext context) {
@@ -369,3 +455,62 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 }
+
+  /*List<File> selectedImages = []; // Liste pour stocker les images sélectionnées
+
+  Future<void> pickFromCamera() async {
+    try {
+      XFile? pickedFile = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 50,
+      );
+
+      if (pickedFile != null) {
+        selectedImages.add(File(pickedFile.path));
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
+  Future<void> pickFromGallery() async {
+    try {
+      XFile? pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 50,
+      );
+
+      if (pickedFile != null) {
+        selectedImages.add(File(pickedFile.path));
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
+  Future<void> cropImages() async {
+    for (File file in selectedImages) {
+      final croppedFile =
+          await ImageCropper().cropImage(sourcePath: file.path, uiSettings: [
+        AndroidUiSettings(
+            toolbarTitle: "Documment Cropper",
+            toolbarColor: Colors.blue,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false)
+      ]);
+
+      if (croppedFile != null) {
+        imageCache.clear();
+        setState(() {
+          imageFile = File(croppedFile.path);
+        });
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => InformationScreen(
+            imageFile: imageFile,
+          ),
+        ));
+      }
+    }
+  }
+}*/
